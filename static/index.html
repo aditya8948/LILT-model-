@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCR + LiLT Document Pipeline</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Top Bar: Upload & Controls -->
+    <header class="top-bar">
+      <div class="brand">
+        <h1>Document Pipeline (OCR &rarr; LiLT)</h1>
+      </div>
+
+      <div class="actions">
+        <!-- Model Selector -->
+        <div class="action-item">
+          <label for="modelSelect">Model:</label>
+          <select id="modelSelect">
+            <option value="lilt_funsd">LiLT (FUNSD Pre-trained)</option>
+            <option value="lilt_base">LiLT (Base RoBERTa)</option>
+            <option value="heuristic_baseline">Heuristic Baseline</option>
+          </select>
+        </div>
+
+        <!-- Upload Button -->
+        <div class="action-item">
+          <label for="fileInput" class="upload-btn">Upload Image</label>
+          <input type="file" id="fileInput" accept="image/*">
+          <span id="fileNameDisplay" class="file-label">No image selected</span>
+        </div>
+
+        <!-- Process Button -->
+        <button id="runBtn" class="btn-process">Process Document</button>
+      </div>
+    </header>
+
+    <!-- Stage View Switcher & Zoom Controls -->
+    <div class="stage-bar">
+      <div class="switch-container">
+        <span class="stage-label">View Stage:</span>
+        <button id="btnOcr" class="btn-stage">🔍 Show OCR Results</button>
+        <button id="btnLilt" class="btn-stage active">🧠 Show LiLT Results</button>
+      </div>
+
+      <div class="zoom-controls">
+        <span class="zoom-label">Zoom:</span>
+        <button id="zoomOutBtn" class="btn-zoom" title="Zoom Out">&minus;</button>
+        <span id="zoomLevelDisplay" class="zoom-val">110%</span>
+        <button id="zoomInBtn" class="btn-zoom" title="Zoom In">&plus;</button>
+        <button id="zoomResetBtn" class="btn-zoom" title="Reset Zoom">Reset</button>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Split Workspace -->
+    <main class="workspace-grid">
+      <!-- LEFT SIDE: Image Display (Annotated OCR or LiLT) -->
+      <section class="left-pane">
+        <div class="pane-title" id="imagePaneTitle">
+          LiLT Processed Document (SER & RE)
+        </div>
+        <div class="image-viewport" id="imageViewport">
+          <div class="image-container" id="imageContainer">
+            <img id="displayImage" alt="Document view">
+            <div id="loadingOverlay" class="loading-overlay">
+              <div class="spinner"></div>
+              <span>Processing OCR & LiLT pipeline...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actual / Original Image Box (Requested by user) -->
+        <div class="original-box">
+          <div class="pane-title sub-title">
+            <span>Actual Input Image (Original Document)</span>
+          </div>
+          <div class="image-viewport original-viewport">
+            <div class="image-container" id="originalImageContainer">
+              <img id="originalDocImage" alt="Actual input document">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT SIDE: Extracted Data (OCR or LiLT SER + RE) -->
+      <section class="right-pane">
+        <!-- OCR Results View (Shown when OCR button is clicked) -->
+        <div id="ocrContent" class="results-container" style="display: none;">
+          <div class="pane-title">
+            <span>OCR Extracted Text & Coordinates</span>
+            <span class="meta-badge" id="ocrCountBadge">0 words</span>
+          </div>
+          <div class="summary-line" id="ocrSummaryLine">Detected words and pixel coordinates:</div>
+          
+          <div class="table-scroll">
+            <table class="ocr-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;">#</th>
+                  <th>Extracted Text</th>
+                  <th style="width: 70px;">Conf</th>
+                  <th>Pixel Coordinates [x0, y0, x1, y1]</th>
+                  <th>Normalized [0-1000]</th>
+                </tr>
+              </thead>
+              <tbody id="ocrTableBody">
+                <tr><td colspan="5" class="empty-state">No OCR data loaded.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- LiLT Results View (Shown when LiLT button is clicked) -->
+        <div id="liltContent" class="results-container">
+          <div class="pane-title">
+            <span>LiLT Predictions: SER & RE</span>
+            <span class="meta-badge" id="liltCountBadge">0 entities</span>
+          </div>
+
+          <!-- Section 1: SER (Semantic Entity Recognition) -->
+          <div class="section-box">
+            <div class="section-header">
+              <span class="section-tag tag-ser">SER</span>
+              <h3>Semantic Entity Recognition</h3>
+              <span class="section-count" id="serCount">0 found</span>
+            </div>
+            <div class="section-desc">Entities categorized into Header, Question, Answer with LiLT confidence score:</div>
+            <div class="ser-list" id="serList">
+              <div class="empty-state">Run pipeline to view SER results.</div>
+            </div>
+          </div>
+
+          <!-- Section 2: RE (Relation Extraction) -->
+          <div class="section-box">
+            <div class="section-header">
+              <span class="section-tag tag-re">RE</span>
+              <h3>Relation Extraction</h3>
+              <span class="section-count" id="reCount">0 found</span>
+            </div>
+            <div class="section-desc">Key-Value relations linked by LiLT with relation extraction score:</div>
+            <div class="re-list" id="reList">
+              <div class="empty-state">Run pipeline to view RE relations.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
